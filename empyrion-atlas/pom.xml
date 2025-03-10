@@ -5,8 +5,10 @@
  	<version>0.0.1-SNAPSHOT</version>
   	<name>Empyrion Atlas</name>
   	<properties>
-    	<java.version>17</java.version>
+    	<java.version>18</java.version>
     	<spring-boot.version>3.2.2</spring-boot.version>
+    	<maven.compiler.source>18</maven.compiler.source>
+    	<maven.compiler.target>18</maven.compiler.target>
 	</properties>
 
 	<repositories>
@@ -34,7 +36,7 @@
         <!-- Spring Boot DevTools (Hot Reload) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-devtools</artifactId>
+        <artifactId>spring-boot-devtools</artifactId>
             <scope>runtime</scope>
             <optional>true</optional>
         </dependency>
@@ -48,8 +50,8 @@
 	    <!-- Hibernate ORM (JPA Implementation) -->
 	    <dependency>
 		    <groupId>org.hibernate</groupId>
-		    <artifactId>hibernate-entitymanager</artifactId>
-		    <version>5.4.10.Final</version>
+		    <artifactId>hibernate-core</artifactId>
+		    <version>6.6.9.Final</version>
 		</dependency>
 	
 	    <!-- PostgreSQL Driver (or MySQL, depending on your database) -->
@@ -115,7 +117,7 @@
 	                </execution>
 	            </executions>
 	        </plugin>
-	        <!-- Start React App -->
+	        <!-- Start React App
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
@@ -137,6 +139,7 @@
                     </execution>
                 </executions>
             </plugin>
+             -->
         </plugins>
     </build>
 </project>
