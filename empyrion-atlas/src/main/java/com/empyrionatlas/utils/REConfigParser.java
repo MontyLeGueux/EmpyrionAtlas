@@ -13,23 +13,52 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.empyrionatlas.dto.GlobalDefConfigEntryDTO;
 import com.empyrionatlas.dto.TradeConfigParseResultDTO;
 import com.empyrionatlas.model.TraderData;
 import com.empyrionatlas.model.ItemData;
 import com.empyrionatlas.model.TradeData;
-import com.empyrionatlas.service.ModTradingDataService;
 
 public class REConfigParser {
 	
 	private static final Logger logger = LoggerFactory.getLogger(REConfigParser.class);
 	
 	private static final Pattern ITEM_NAME_PATTERN = Pattern.compile("Name:\\s*(\\S+)");
+	private static final Pattern ITEM_GLOBALREF_PATTERN = Pattern.compile("GlobalRef:\\s*(\\S+)");
     private static final Pattern ITEM_PRICE_PATTERN = Pattern.compile("MarketPrice:\\s*(\\d+(\\.\\d+)?)");
 	
-	public static List<ItemData> parseItemConfigFile(File ecfFile) throws IOException {
+	public static List<ItemData> parseItemConfigFile(File ecfFile, File globalDefFile) throws IOException {
 		List<ItemData> items = new ArrayList<>();
 		String itemName = null;
-        double marketPrice = 0;
+        int marketPrice = 0;
+        List<GlobalDefConfigEntryDTO> globalDefConfig = new ArrayList<>();
+        
+        logger.info("Parsing global def config file ...");
+        
+        try (BufferedReader br = new BufferedReader(new FileReader(globalDefFile))) {
+        	String line;
+            while ((line = br.readLine()) != null) {
+            	Matcher nameMatcher = ITEM_NAME_PATTERN.matcher(line);
+                Matcher priceMatcher = ITEM_PRICE_PATTERN.matcher(line);
+                
+                if (nameMatcher.find()) {
+                	itemName = nameMatcher.group(1);
+                } else if (priceMatcher.find()) {
+                    marketPrice = Integer.parseInt(priceMatcher.group(1));
+                }
+                
+                if (itemName != null && marketPrice > 0) {
+                	globalDefConfig.add(new GlobalDefConfigEntryDTO(itemName, (int)marketPrice));
+                    itemName = null;
+                    marketPrice = 0;
+                }
+            }
+        }
+        
+        itemName = null;
+        marketPrice = 0;
+        
+        logger.info("Parsing item config file ...");
 
         try (BufferedReader br = new BufferedReader(new FileReader(ecfFile))) {
             String line;
@@ -37,11 +66,24 @@ public class REConfigParser {
                 line = line.trim();
                 Matcher nameMatcher = ITEM_NAME_PATTERN.matcher(line);
                 Matcher priceMatcher = ITEM_PRICE_PATTERN.matcher(line);
+                Matcher globalRefMatcher = ITEM_GLOBALREF_PATTERN.matcher(line);
 
                 if (nameMatcher.find()) {
                     itemName = nameMatcher.group(1);
+                    if(itemName.contains(",")) {
+                    	itemName = itemName.substring(0, itemName.length() - 1);
+                    }
                 } else if (priceMatcher.find()) {
-                    marketPrice = Double.parseDouble(priceMatcher.group(1));
+                    marketPrice = Integer.parseInt(priceMatcher.group(1));
+                } else if(globalRefMatcher.find()) {
+                	GlobalDefConfigEntryDTO result = globalDefConfig.stream()
+                            .filter(dto -> dto.getName().equals(globalRefMatcher.group(1)))
+                            .findFirst()
+                            .orElse(null);
+                	if(result != null) {
+                		marketPrice = result.getMarketPrice();
+                		logger.info("Found item " + itemName + " with globalRef " + globalRefMatcher.group(1));
+                	}
                 }
 
                 if (itemName != null && marketPrice > 0) {
@@ -51,6 +93,7 @@ public class REConfigParser {
                 }
             }
         }
+        logger.info("Parsed " + items.size() + " items");
 		return items;
 	}
 
@@ -59,38 +102,40 @@ public class REConfigParser {
         TraderData currentTrader = null;
         List<TradeData> items = new ArrayList<>();
 
+        logger.info("Parsing traders config file ...");
+        
         try (BufferedReader br = new BufferedReader(new FileReader(ecfFile))) {
             String line;
             while ((line = br.readLine()) != null) {
                 line = line.trim();
                 if (line.isEmpty() || line.startsWith("#")) {
-                    continue; // Ignore comments and empty lines
+                    continue;
                 }
 
                 if (line.startsWith("{")) {
                     if (currentTrader != null) {
                         currentTrader.setItemsForSale(items);
-                        traders.add(currentTrader); // Save the previous trader before starting a new one
+                        traders.add(currentTrader);
                     }
                     currentTrader = new TraderData();
                     items = new ArrayList<>();
-                    line = line.substring(1); //Removing the { so the rest of the code can read the line
+                    line = line.substring(1);
                     line.trim();
                 }
 
                 if (line.startsWith("}")) {
                     if (currentTrader != null) {
                         currentTrader.setItemsForSale(items);
-                        traders.add(currentTrader); // Add the last trader in the file
+                        traders.add(currentTrader);
                     }
-                    continue; // End of a trader block
+                    continue;
                 }
 
                 String[] parts = line.split(":", 2);
                 if (parts.length < 2) continue;
 
                 String key = parts[0].trim();
-                String value = parts[1].trim().replaceAll("\"", ""); // Remove quotes
+                String value = parts[1].trim().replaceAll("\"", "");
                 if (currentTrader != null) {
                     switch (key) { //add extra trader values here as needed.
                         case "Trader Name" -> {
@@ -105,17 +150,18 @@ public class REConfigParser {
                 }
             }
         }
+        logger.info("Parsed " + traders.size() + " traders");
 		return new TradeConfigParseResultDTO(traders);
 	}
 	
 	private static TradeData parseTrade(String itemLine, TraderData trader, Map<String, ItemData> itemCache) {
-		logger.info("Parsing item from " + itemLine);
+		//logger.info("Parsing item from " + itemLine);
         String[] parts = itemLine.split(",");
         String itemName = parts[0].trim();
         
         ItemData item = itemCache.get(itemName);
         if(item == null) {
-        	logger.error("Couldn't find item : " + itemName + " in cache, aborting trade parsing");
+        	//logger.error("Couldn't find item : " + itemName + " in cache, aborting trade parsing");
         	return null;
         }
 

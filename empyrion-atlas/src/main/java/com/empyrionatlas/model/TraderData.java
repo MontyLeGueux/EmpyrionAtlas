@@ -33,4 +33,5 @@ public class TraderData {
 		this.name = name;
 	}
 
+	public String getName() { return name; }
 }

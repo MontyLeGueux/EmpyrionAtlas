@@ -46,12 +46,32 @@ public class TradeData {
         this.buyMarketFluctuationMin = buyMarketFluctuationMin;
         this.buyMarketFluctuationMax = buyMarketFluctuationMax;
     }
+    
+    public double getSellMarketFluctuationMin() { return sellMarketFluctuationMin; }
+    public double getSellMarketFluctuationMax() { return sellMarketFluctuationMax; }
+    public double getBuyMarketFluctuationMin() { return buyMarketFluctuationMin; }
+    public double getBuyMarketFluctuationMax() { return buyMarketFluctuationMax; }
+    
+    public int getSellStockMin() { return sellStockMin; }
+    public int getSellStockMax() { return sellStockMax; }
+    public int getTotalStockMin() { return totalStockMin; }
+    public int getTotalStockMax() { return totalStockMax; }
+    
+    public TraderData getTrader() { return trader; }
 
-    public double getAdjustedSellPrice() {
+    public double getAverageSellPrice() {
         return item.getBasePrice() * ((sellMarketFluctuationMin + sellMarketFluctuationMax) / 2);
     }
 
-    public double getAdjustedBuyPrice() {
+    public double getAverageBuyPrice() {
         return item.getBasePrice() * ((buyMarketFluctuationMin + buyMarketFluctuationMax) / 2);
+    }
+    
+    public int getAverageSellVolume() {
+        return (int) ((sellStockMin + sellStockMax) / 2);
+    }
+
+    public int getAverageBuyVolume() {
+        return (int) (((totalStockMin + totalStockMax) / 2) - getAverageSellVolume());
     }
 }
