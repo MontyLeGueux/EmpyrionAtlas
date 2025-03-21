@@ -12,7 +12,7 @@ import com.empyrionatlas.dto.ItemTradeInfoDTO;
 import com.empyrionatlas.service.ModTradingDataService;
 
 @RestController
-@RequestMapping("/api/test")
+@RequestMapping("/api/items")
 public class TradingInformationController {
 	
 	private final ModTradingDataService modTradingDataService;

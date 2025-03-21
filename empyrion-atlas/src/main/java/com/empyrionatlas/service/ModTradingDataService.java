@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -52,20 +53,22 @@ public class ModTradingDataService {
     }
     
     public List<ItemTradeInfoDTO> getItemTradeData(String itemName) {
-    	boolean itemExists = itemRepository.findByItemName(itemName) != null;
+    	boolean itemExists = !itemRepository.findByItemName(itemName).isEmpty();
     	List<TradeData> allTradesWithItem = tradeRepository.findByItemName(itemName);
     	List<ItemTradeInfoDTO> result = new ArrayList<ItemTradeInfoDTO>();
     	
     	logger.info("Looking for item : " + itemName);
     	
-    	if (allTradesWithItem.isEmpty()) {
-    		logger.info("item : " + itemName + " had no trades associated with it");
-            return result;
-        }
     	if(!itemExists) {
     		logger.info("item : " + itemName + " is not in the database");
     		return null;
     	}
+    	
+    	
+    	if (allTradesWithItem.isEmpty()) {
+    		logger.info("item : " + itemName + " had no trades associated with it");
+            return result;
+        }
     	
     	for(TradeData trade : allTradesWithItem) {
     		result.add(new ItemTradeInfoDTO(itemName,

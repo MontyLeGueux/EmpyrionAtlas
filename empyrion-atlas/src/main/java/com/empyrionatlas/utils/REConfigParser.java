@@ -155,13 +155,14 @@ public class REConfigParser {
 	}
 	
 	private static TradeData parseTrade(String itemLine, TraderData trader, Map<String, ItemData> itemCache) {
-		//logger.info("Parsing item from " + itemLine);
+		logger.info("Parsing item from " + itemLine);
         String[] parts = itemLine.split(",");
         String itemName = parts[0].trim();
+        String[] range;
         
         ItemData item = itemCache.get(itemName);
         if(item == null) {
-        	//logger.error("Couldn't find item : " + itemName + " in cache, aborting trade parsing");
+        	logger.error("Couldn't find item : " + itemName + " in cache, aborting trade parsing");
         	return null;
         }
 
@@ -169,6 +170,55 @@ public class REConfigParser {
         int sellStockMin = 0, sellStockMax = 0, totalStockMin = 0, totalStockMax = 0;
         boolean isParsingSell = true;
 
+        //Parse sell data
+        if(parts.length >= 3) {
+        	range = parts[1].replace("mf=", "").split("-");
+        	minSellMF = Double.parseDouble(range[0].trim());
+        	if(range.length > 1) {
+        		maxSellMF = Double.parseDouble(range[1].trim());
+        	}
+        	else {
+        		maxSellMF = 0;
+        	}
+            logger.info("Parsing sell mf :" + minSellMF + " " + maxSellMF);
+            
+            parts[2] = parts[2].split("#")[0];
+            range = parts[2].split("-");
+            sellStockMin = Integer.parseInt(range[0].trim());
+            if(range.length > 1) {
+            	sellStockMax = Integer.parseInt(range[1].trim());
+            }
+            else {
+            	sellStockMax = 0;
+            }
+            
+        	logger.info("Parsing sell stock :" + sellStockMin + " " + sellStockMax);
+        }
+        //Parse buy data
+        if(parts.length >= 5) {
+        	range = parts[3].replace("mf=", "").split("-");
+        	minBuyMF = Double.parseDouble(range[0].trim());
+        	if(range.length > 1) {
+        		maxBuyMF = Double.parseDouble(range[1].trim());
+        	}
+        	else {
+        		maxBuyMF = 0;
+        	}
+    		
+    		logger.info("Parsing buy mf :" + minBuyMF + " " + maxBuyMF);
+        	
+    		parts[4] = parts[4].split("#")[0];
+    		range = parts[4].split("-");
+    		totalStockMin = Integer.parseInt(range[0].trim());
+    		if(range.length > 1) {
+    			totalStockMax = Integer.parseInt(range[1].trim());
+    		}
+    		else {
+    			totalStockMax = 0;
+    		}
+        	logger.info("Parsing total stock :" + totalStockMin + " " + totalStockMax);
+        }
+        /*
         for (String part : parts) {
             part = part.trim();
             if (part.startsWith("mf=")) {
@@ -176,10 +226,12 @@ public class REConfigParser {
             	if(isParsingSell) {
                     minSellMF = Double.parseDouble(range[0]);
                     maxSellMF = Double.parseDouble(range[1]);
+                    logger.info("Parsing sell mf :" + minSellMF + " " + maxSellMF);
             	}
             	else {
             		minBuyMF = Double.parseDouble(range[0]);
             		maxBuyMF = Double.parseDouble(range[1]);
+            		logger.info("Parsing buy mf :" + minBuyMF + " " + maxBuyMF);
             	}
             } else if (part.matches("\\d+-\\d+")) {
                 String[] range = part.split("-");
@@ -187,14 +239,17 @@ public class REConfigParser {
                 	sellStockMin = Integer.parseInt(range[0]);
                 	sellStockMax = Integer.parseInt(range[1]);
                 	isParsingSell = false; 
+                	logger.info("Parsing sell stock :" + sellStockMin + " " + sellStockMax);
                 	//if we're parsing the sell quantities then we're done with the sell market fluctuations too
                 }
                 else {
                 	totalStockMin = Integer.parseInt(range[0]);
                 	totalStockMax = Integer.parseInt(range[1]);
+                	logger.info("Parsing total stock :" + totalStockMin + " " + totalStockMax);
                 }
             }
         }
+        */
 
         return new TradeData(trader, item, sellStockMin, sellStockMax, minSellMF, maxSellMF, totalStockMin, totalStockMax, minBuyMF, maxBuyMF);
     }
