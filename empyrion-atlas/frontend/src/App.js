@@ -7,16 +7,33 @@ function App() {
   const [sellers, setSellers] = useState([]);
   const [buyers, setBuyers] = useState([]);
   const [error, setError] = useState('');
+  const [suggestions, setSuggestions] = useState([]);
+  const [focused, setFocused] = useState(false);
+  
+  const fetchSuggestions = async (query) => {
+    if (query.length < 2) {
+      setSuggestions([]);
+      return;
+    }
 
-  const handleSearch = async () => {
-    if (!itemName.trim()) return;
+    try {
+      const response = await axios.get(`http://localhost:8080/api/items/suggest?query=${query}`);
+      setSuggestions(response.data);
+    } catch (err) {
+      console.error("Failed to fetch suggestions", err);
+    }
+  };
+
+  const handleSearch = async (overrideName) => {
+	const nameToSearch = overrideName ?? itemName;
+    if (!nameToSearch.trim()) return;
 
     setError('');
     setSellers([]);
     setBuyers([]);
 
     try {
-      const response = await axios.get(`http://localhost:8080/api/items/${itemName}`);
+      const response = await axios.get(`http://localhost:8080/api/items/${nameToSearch}`);
 
       const data = response.data;
 
@@ -54,14 +71,35 @@ function App() {
   return (
     <div className="container">
       <h1>Trade Lookup</h1>
-
       <div className="search-bar">
-        <input
-          type="text"
-          placeholder="Enter item name"
-          value={itemName}
-          onChange={(e) => setItemName(e.target.value)}
-        />
+	  	<div className="autocomplete-container">
+		  <input
+		    type="text"
+		    placeholder="Enter item name"
+		    value={itemName}
+		    onChange={(e) => {
+		      const value = e.target.value;
+		      setItemName(value);
+		      fetchSuggestions(value);
+		    }}
+		    onFocus={() => setFocused(true)}
+		    onBlur={() => setTimeout(() => setFocused(false), 100)} // delay so click works
+		  />
+		  {focused && suggestions.length > 0 && (
+			
+		    <ul className="suggestions">
+		      {suggestions.map((s, idx) => (
+		        <li key={idx} onMouseDown={() => {
+		          setItemName(s);
+		          setSuggestions([]);
+				  handleSearch(s);
+		        }}>
+		          {s}
+		        </li>
+		      ))}
+		    </ul>
+		  )}
+		  </div>
         <button onClick={handleSearch}>Search</button>
       </div>
 
@@ -107,5 +145,6 @@ function App() {
     </div>
   );
 }
+
 
 export default App;

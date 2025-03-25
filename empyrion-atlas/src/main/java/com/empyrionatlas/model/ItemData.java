@@ -10,7 +10,10 @@ public class ItemData {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 	
-	@Column(nullable = false, unique = true)
+	@Column(nullable = false)
+    private String stringID;
+	
+	@Column(nullable = true)
     private String itemName;
 	
 	@Column()
@@ -18,11 +21,15 @@ public class ItemData {
 	
 	public ItemData() {}
 
-    public ItemData(String itemName, double basePrice) {
-        this.itemName = itemName;
+    public ItemData(String stringID, double basePrice, String itemName) {
+        this.stringID = stringID;
         this.basePrice = basePrice;
+        this.itemName = itemName;
     }
 
+    public String getStringID() { return stringID; }
+    public void setStringID(String stringID) { this.stringID = stringID; }
+    
     public String getItemName() { return itemName; }
     public void setItemName(String itemName) { this.itemName = itemName; }
 

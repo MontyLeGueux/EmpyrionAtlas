@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -40,11 +39,18 @@ public class ModTradingDataService {
     @Value("${REConfig.traderFilePath}")
     private String efcTraderInfoFilePath;
     
+    @Value("${REConfig.blocksFilePath}")
+    private String ecfBlocksInfoFilePath;
+    
     @Value("${REConfig.itemFilePath}")
     private String ecfItemsInfoFilePath;
     
     @Value("${REConfig.globalDefPath}")
     private String ecfGlobalDefFilePath;
+    
+    @Value("${REConfig.LocalizationFilePath}")
+    private String csvLocalizationFilePath;
+
 
     public ModTradingDataService(TraderRepository traderRepository, ItemRepository itemRepository, TradeRepository tradeRepository) {
         this.traderRepository = traderRepository;
@@ -91,7 +97,7 @@ public class ModTradingDataService {
         	
         	Map<String, ItemData> itemCache = itemRepository.findAll()
                     .stream()
-                    .collect(Collectors.toMap(ItemData::getItemName, item -> item));
+                    .collect(Collectors.toMap(ItemData::getStringID, item -> item));
         	
             processTraderConfigFile(itemCache);  
             logger.info("Reloaded trading data successfully.");
@@ -105,20 +111,43 @@ public class ModTradingDataService {
     	//refreshTradingData();
     }
     
+    public List<String> suggestItemNames(String query) {
+    	logger.info("Looking for item suggestions with input: " + query);
+    	List<String> suggestedNames = new ArrayList<String>();
+        List<ItemData> suggestedItems = itemRepository.findTop5ByItemNameIgnoreCaseContainingOrderByItemNameAsc(query);
+        
+        for(ItemData item : suggestedItems) {
+        	suggestedNames.add(item.getItemName());
+        }
+        
+        return suggestedNames;
+    }
+
+    
     private void processItemsConfigFile() throws IOException {
         File itemsConfigFile = new File(ecfItemsInfoFilePath);
+        File blocksConfigFile = new File(ecfBlocksInfoFilePath);
         File globalDefFile = new File(ecfGlobalDefFilePath);
+        File localizationFile = new File(csvLocalizationFilePath);
+        
 
         if (!itemsConfigFile.exists()) {
             throw new IOException("TraderNPCConfig.ecf not found at : " + ecfItemsInfoFilePath);
         }
+        if (!blocksConfigFile.exists()) {
+            throw new IOException("BlocksConfig.ecf not found at : " + ecfBlocksInfoFilePath);
+        }
         if (!globalDefFile.exists()) {
             throw new IOException("GlobalDefsConfig.ecf not found at : " + ecfGlobalDefFilePath);
         }
+        if (!localizationFile.exists()) {
+            throw new IOException("Localization.csv not found at : " + csvLocalizationFilePath);
+        }
+        
 
-        List<ItemData> items = REConfigParser.parseItemConfigFile(itemsConfigFile, globalDefFile);
+        List<ItemData> items = REConfigParser.parseItemConfigFile(itemsConfigFile, blocksConfigFile, globalDefFile, localizationFile);
         for(ItemData item : items) {
-        	if (itemRepository.findByItemName(item.getItemName()).isEmpty()) {
+        	if (itemRepository.findByStringID(item.getStringID()).isEmpty()) {
         		itemRepository.save(item);
         	}
         }

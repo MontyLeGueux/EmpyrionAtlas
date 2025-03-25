@@ -1,15 +1,15 @@
 package com.empyrionatlas.dto;
 
 public class ItemTradeInfoDTO {
-    private String itemName;
+    private String itemStringID;
     private double avgSellPrice;
     private double avgBuyPrice;
     private int avgSellVolume;
     private int avgBuyVolume;
     private TraderDTO trader;
     
-    public ItemTradeInfoDTO(String itemName, double avgSellPrice, double avgBuyPrice, int avgSellVolume, int avgBuyVolume, TraderDTO trader) {
-        this.itemName = itemName;
+    public ItemTradeInfoDTO(String itemStringID, double avgSellPrice, double avgBuyPrice, int avgSellVolume, int avgBuyVolume, TraderDTO trader) {
+        this.itemStringID = itemStringID;
         this.avgSellPrice = avgSellPrice;
         this.avgBuyPrice = avgBuyPrice;
         this.avgSellVolume = avgSellVolume;
@@ -17,7 +17,7 @@ public class ItemTradeInfoDTO {
         this.trader = trader;
     }
 
-    public String getItemName() { return itemName; }
+    public String getItemStringID() { return itemStringID; }
     public double getAvgSellPrice() { return avgSellPrice; }
     public double getAvgBuyPrice() { return avgBuyPrice; }
     public int getAvgSellVolume() { return avgSellVolume; }
