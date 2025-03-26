@@ -6,14 +6,14 @@ public class BlueprintParseResultDTO {
 	
 	private String blueprintName;
 	
-	private List<String> blueprintTraderNames;
+	private List<TraderInstanceDTO> blueprintTraderInstances;
 	
-    public BlueprintParseResultDTO(String blueprintName, List<String> blueprintTraderNames) {
+    public BlueprintParseResultDTO(String blueprintName, List<TraderInstanceDTO> blueprintTraderInstances) {
         this.blueprintName = blueprintName;
-        this.blueprintTraderNames = blueprintTraderNames;
+        this.blueprintTraderInstances = blueprintTraderInstances;
     }
 
     public String getBlueprintName() { return blueprintName; }
     
-    public List<String> getBlueprintTraderNames() { return blueprintTraderNames; }
+    public List<TraderInstanceDTO> getBlueprintTraderInstances() { return blueprintTraderInstances; }
 }

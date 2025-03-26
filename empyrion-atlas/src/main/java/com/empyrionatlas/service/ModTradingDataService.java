@@ -7,6 +7,7 @@ import com.empyrionatlas.dto.BlueprintParseResultDTO;
 import com.empyrionatlas.dto.ItemTradeInfoDTO;
 import com.empyrionatlas.dto.TradeConfigParseResultDTO;
 import com.empyrionatlas.dto.TraderDTO;
+import com.empyrionatlas.dto.TraderInstanceDTO;
 import com.empyrionatlas.model.ItemData;
 import com.empyrionatlas.model.StationData;
 import com.empyrionatlas.model.TradeData;
@@ -172,6 +173,8 @@ public class ModTradingDataService {
     private void processStationBlueprintFiles() throws IOException{
     	File blueprintFolder = new File(blueprintsFolderPath);
     	
+    	logger.info("Parsing blueprint folder ...");
+    	
     	if(blueprintFolder != null && blueprintFolder.exists()) {
     		File[] blueprints = blueprintFolder.listFiles();
     		BlueprintParseResultDTO parseResult = null;
@@ -180,13 +183,14 @@ public class ModTradingDataService {
     		TraderData trader = null;
     		
     		for (File blueprint : blueprints) {
-    	        if (blueprint.isFile()) {
+    	        if (blueprint.isFile() && blueprint.getName().endsWith(EGSBlueprintParser.BLUEPRINT_FILE_EXTENSION)) {
+    	        	logger.info("Parsing blueprint file : " + blueprint.getName());
     	        	parseResult = EGSBlueprintParser.parseBlueprintFile(blueprint);
     	        	if(parseResult != null 
     	        			&& parseResult.getBlueprintName() != null 
     	        			&& !parseResult.getBlueprintName().isEmpty()
-    	        			&& parseResult.getBlueprintTraderNames() != null
-    	        			&& !parseResult.getBlueprintTraderNames().isEmpty()) {
+    	        			&& parseResult.getBlueprintTraderInstances() != null
+    	        			&& !parseResult.getBlueprintTraderInstances().isEmpty()) {
     	        		
     	        		final String stationName = parseResult.getBlueprintName();
     	        		station = stationRepository.findByName(parseResult.getBlueprintName())
@@ -196,18 +200,19 @@ public class ModTradingDataService {
     	        			        return stationRepository.save(newStation);
     	        			    });
     	        		
-    	        		for (String traderName : parseResult.getBlueprintTraderNames()) {
-    	        		   trader = traderRepository.findByName(traderName).orElse(null);
+    	        		for (TraderInstanceDTO traderInstanceDTO : parseResult.getBlueprintTraderInstances()) {
+    	        		   trader = traderRepository.findByName(traderInstanceDTO.getTraderName()).orElse(null);
     	        		   
     	        		    if(trader != null) {
     	        		    	traderInstance = new TraderInstanceData();
     	        		    	traderInstance.setStation(station);
     	        		    	traderInstance.setTrader(trader);
+    	        		    	traderInstance.setRestockTimer(traderInstanceDTO.getRestockTimer());
 
         	        		    traderInstanceRepository.save(traderInstance);
     	        		    }
     	        		    else {
-    	        		    	logger.info("Couldn't find trader : " + traderName + " in station : " + station.getName());
+    	        		    	logger.info("Couldn't find trader : " + traderInstanceDTO.getTraderName() + " in station : " + station.getName());
     	        		    }
     	        		}
     	        	}

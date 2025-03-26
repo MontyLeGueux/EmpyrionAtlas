@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.empyrionatlas.dto.BlueprintParseResultDTO;
+import com.empyrionatlas.dto.TraderInstanceDTO;
 import com.empyrionatlas.service.ModTradingDataService;
 
 public class EGSBlueprintParser {
@@ -25,14 +26,15 @@ public class EGSBlueprintParser {
 	public static final byte BLUEPRINT_TRADER_DATA_END_BYTE = 0x00;
 	
 	public static final String BLUEPRINT_FILE_EXTENSION = ".epb";
-	public static final String BLUEPRINT_TRADER_DATA_START_STRING = "Type";
+	public static final String BLUEPRINT_TRADER_NAME_START_STRING = "Type";
+	public static final String BLUEPRINT_TRADER_RESTOCK_START_STRING = "Restock";
 	
 	private static final Logger logger = LoggerFactory.getLogger(ModTradingDataService.class);
 	
 	public static BlueprintParseResultDTO parseBlueprintFile(File blueprintFile) throws IOException {
 		if(blueprintFile != null && blueprintFile.exists() && blueprintFile.getName().endsWith(BLUEPRINT_FILE_EXTENSION)) {
 			logger.info("Reading blueprint file : " + blueprintFile.toPath().toString());
-			return new BlueprintParseResultDTO(extractBlueprintName(blueprintFile), extractTraderNames(blueprintFile));
+			return new BlueprintParseResultDTO(extractBlueprintName(blueprintFile), extractTraderInstances(blueprintFile));
 		}
 		else {
 			return null;
@@ -86,7 +88,7 @@ public class EGSBlueprintParser {
 	    return value >= 32 && value <= 126; // Basic ASCII character range
 	}
 	
-	private static List<String> extractTraderNames(File blueprintFile) throws IOException {
+	private static List<TraderInstanceDTO> extractTraderInstances(File blueprintFile) throws IOException {
 		byte[] fileBytes;
 		
 		logger.info("Looking for traders in blueprint");
@@ -112,7 +114,7 @@ public class EGSBlueprintParser {
 
         logger.info("Parsing names");
         if(unzippedData != null) {
-        	return extractNamesFromUnzippedData(unzippedData);
+        	return extractTraderInstancesFromUnzippedData(unzippedData);
         }
         else {
         	return null;
@@ -145,13 +147,15 @@ public class EGSBlueprintParser {
         return result;
     }
 
-    private static List<String> extractNamesFromUnzippedData(byte[] data) {
-        List<String> traderNames = new ArrayList<>();
-        byte[] typePrefix = BLUEPRINT_TRADER_DATA_START_STRING.getBytes(StandardCharsets.UTF_8);
+    private static List<TraderInstanceDTO> extractTraderInstancesFromUnzippedData(byte[] data) {
+        List<TraderInstanceDTO> traderInstances = new ArrayList<TraderInstanceDTO>();
+        byte[] namePrefix = BLUEPRINT_TRADER_NAME_START_STRING.getBytes(StandardCharsets.UTF_8);
+        byte[] restockPrefix = BLUEPRINT_TRADER_RESTOCK_START_STRING.getBytes(StandardCharsets.UTF_8);
+        String currentTraderName = null;
 
-        for (int i = 0; i < data.length - typePrefix.length; i++) {
-            if (matchesAt(data, i, typePrefix)) {
-                int start = i + typePrefix.length;
+        for (int i = 0; i < data.length - namePrefix.length; i++) {
+            if (matchesAt(data, i, namePrefix)) {
+                int start = i + namePrefix.length;
                 int end = start;
 
                 while (end < data.length && data[end] != BLUEPRINT_TRADER_DATA_END_BYTE) {
@@ -163,23 +167,31 @@ public class EGSBlueprintParser {
                     String name = new String(nameBytes, StandardCharsets.UTF_8);
 
                     if (!name.isBlank()) {
-                        traderNames.add(name.trim());
+                    	currentTraderName = name.trim();
+                    	logger.info("Found trader named : " + currentTraderName);
                     }
 
                     i = end;
-                }
+                } 
+            }
+            if (matchesAt(data, i, restockPrefix)
+            		&& currentTraderName != null
+            		&& i + BLUEPRINT_TRADER_RESTOCK_START_STRING.length() < data.length) {
+            	byte restockTimerbyte = data[i + BLUEPRINT_TRADER_RESTOCK_START_STRING.length()];
+            	traderInstances.add(new TraderInstanceDTO(currentTraderName, restockTimerbyte & 0xFF)); //restock timer is an uint8
+            	logger.info("Parsed trader with name : " + currentTraderName + " and restock timer : " + (restockTimerbyte & 0xFF));
+            	currentTraderName = null;
             }
         }
-        return traderNames;
+        return traderInstances;
     }
 
     private static boolean matchesAt(byte[] data, int offset, byte[] pattern) {
-        for (int j = 0; j < pattern.length; j++) {
-            if (data[offset + j] != pattern[j]) {
-                return false;
-            }
+    	boolean matches = true;
+        for (int j = 0; j < pattern.length && j < data.length && matches; j++) {
+            matches = matches && data[offset + j] == pattern[j];
         }
-        return true;
+        return matches;
     }
 	
 }
