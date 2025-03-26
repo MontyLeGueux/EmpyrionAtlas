@@ -3,15 +3,21 @@ package com.empyrionatlas.service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.empyrionatlas.dto.BlueprintParseResultDTO;
 import com.empyrionatlas.dto.ItemTradeInfoDTO;
 import com.empyrionatlas.dto.TradeConfigParseResultDTO;
 import com.empyrionatlas.dto.TraderDTO;
 import com.empyrionatlas.model.ItemData;
+import com.empyrionatlas.model.StationData;
 import com.empyrionatlas.model.TradeData;
 import com.empyrionatlas.model.TraderData;
+import com.empyrionatlas.model.TraderInstanceData;
 import com.empyrionatlas.repository.ItemRepository;
+import com.empyrionatlas.repository.StationRepository;
 import com.empyrionatlas.repository.TradeRepository;
+import com.empyrionatlas.repository.TraderInstanceRepository;
 import com.empyrionatlas.repository.TraderRepository;
+import com.empyrionatlas.utils.EGSBlueprintParser;
 import com.empyrionatlas.utils.REConfigParser;
 
 import jakarta.annotation.PostConstruct;
@@ -32,6 +38,8 @@ public class ModTradingDataService {
 	private final TraderRepository traderRepository;
 	private final ItemRepository itemRepository;
 	private final TradeRepository tradeRepository;
+	private final TraderInstanceRepository traderInstanceRepository;
+	private final StationRepository stationRepository;
 	
 	private static final Logger logger = LoggerFactory.getLogger(ModTradingDataService.class);
 
@@ -50,12 +58,17 @@ public class ModTradingDataService {
     
     @Value("${REConfig.LocalizationFilePath}")
     private String csvLocalizationFilePath;
+    
+    @Value("${REConfig.blueprintsFolderPath}")
+    private String blueprintsFolderPath;
 
 
-    public ModTradingDataService(TraderRepository traderRepository, ItemRepository itemRepository, TradeRepository tradeRepository) {
+    public ModTradingDataService(TraderRepository traderRepository, ItemRepository itemRepository, TradeRepository tradeRepository, TraderInstanceRepository traderInstanceRepository, StationRepository stationRepository) {
         this.traderRepository = traderRepository;
         this.itemRepository = itemRepository;
         this.tradeRepository = tradeRepository;
+		this.traderInstanceRepository = traderInstanceRepository;
+		this.stationRepository = stationRepository;
     }
     
     public List<ItemTradeInfoDTO> getItemTradeData(String itemName) {
@@ -99,7 +112,10 @@ public class ModTradingDataService {
                     .stream()
                     .collect(Collectors.toMap(ItemData::getStringID, item -> item));
         	
-            processTraderConfigFile(itemCache);  
+            processTraderConfigFile(itemCache);
+            
+            processStationBlueprintFiles();
+            
             logger.info("Reloaded trading data successfully.");
         } catch (Exception e) {
         	logger.error("Error during trading data refresh: " + e.getMessage());
@@ -151,6 +167,53 @@ public class ModTradingDataService {
         		itemRepository.save(item);
         	}
         }
+    }
+    
+    private void processStationBlueprintFiles() throws IOException{
+    	File blueprintFolder = new File(blueprintsFolderPath);
+    	
+    	if(blueprintFolder != null && blueprintFolder.exists()) {
+    		File[] blueprints = blueprintFolder.listFiles();
+    		BlueprintParseResultDTO parseResult = null;
+    		StationData station = null;
+    		TraderInstanceData traderInstance = null;
+    		TraderData trader = null;
+    		
+    		for (File blueprint : blueprints) {
+    	        if (blueprint.isFile()) {
+    	        	parseResult = EGSBlueprintParser.parseBlueprintFile(blueprint);
+    	        	if(parseResult != null 
+    	        			&& parseResult.getBlueprintName() != null 
+    	        			&& !parseResult.getBlueprintName().isEmpty()
+    	        			&& parseResult.getBlueprintTraderNames() != null
+    	        			&& !parseResult.getBlueprintTraderNames().isEmpty()) {
+    	        		
+    	        		final String stationName = parseResult.getBlueprintName();
+    	        		station = stationRepository.findByName(parseResult.getBlueprintName())
+    	        			    .orElseGet(() -> {
+    	        			    	StationData newStation = new StationData();
+    	        			        newStation.setName(stationName);
+    	        			        return stationRepository.save(newStation);
+    	        			    });
+    	        		
+    	        		for (String traderName : parseResult.getBlueprintTraderNames()) {
+    	        		   trader = traderRepository.findByName(traderName).orElse(null);
+    	        		   
+    	        		    if(trader != null) {
+    	        		    	traderInstance = new TraderInstanceData();
+    	        		    	traderInstance.setStation(station);
+    	        		    	traderInstance.setTrader(trader);
+
+        	        		    traderInstanceRepository.save(traderInstance);
+    	        		    }
+    	        		    else {
+    	        		    	logger.info("Couldn't find trader : " + traderName + " in station : " + station.getName());
+    	        		    }
+    	        		}
+    	        	}
+    	        }
+    	    }
+    	}
     }
 
     private void processTraderConfigFile(Map<String, ItemData> itemCache) throws IOException {

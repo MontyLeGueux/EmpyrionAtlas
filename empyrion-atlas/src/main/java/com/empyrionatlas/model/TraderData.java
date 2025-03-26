@@ -19,19 +19,23 @@ public class TraderData {
 	@OneToMany(mappedBy = "trader", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<TradeData> itemsForSale = new ArrayList<>();
 	
+	@OneToMany(mappedBy = "trader", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<TraderInstanceData> locations = new ArrayList<>();
+	
 	public TraderData() {}
 
-    public TraderData(String name) {
-        this.name = name;
+    public TraderData(String name, List<TradeData> itemsForSale, List<TraderInstanceData> locations) { 
+    	this.name = name;
+    	this.itemsForSale = itemsForSale;
+    	this.locations = locations;
     }
 
-	public void setItemsForSale(List<TradeData> items) {
-		this.itemsForSale = items;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
+	public void setName(String name) { this.name = name; }
 	public String getName() { return name; }
+	
+	public List<TradeData> getItemsForSale() { return itemsForSale; }
+    public void setItemsForSale(List<TradeData> itemsForSale) { this.itemsForSale = itemsForSale; }
+	
+	public List<TraderInstanceData> getLocations() { return locations; }
+    public void setLocations(List<TraderInstanceData> locations) { this.locations = locations; }
 }

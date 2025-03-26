@@ -8,6 +8,5 @@ public class TraderDTO {
         this.traderName = traderName;
     }
 
-    // Getters
     public String getTraderName() { return traderName; }
 }
