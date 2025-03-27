@@ -1,0 +1,189 @@
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', Roboto, sans-serif;
+  background-color: #0d0f12;
+  color: #f1f1f1;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Main Layout */
+.empyrion-page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.empyrion-scroll-wrapper {
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* Navbar */
+.empyrion-navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #121419;
+  padding: 1rem 2rem;
+  border-bottom: 1px solid #1c1f24;
+}
+
+.navbar-title {
+  font-size: 1.4rem;
+  color: #37D2FF;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+.navbar-links {
+  display: flex;
+  gap: 2rem;
+}
+
+.nav-link {
+  color: #bbb;
+  font-size: 1rem;
+  transition: color 0.2s ease-in-out;
+}
+
+.nav-link:hover {
+  color: #37D2FF;
+}
+
+.nav-link.active {
+  color: #37D2FF;
+  font-weight: 600;
+}
+
+/* Main Content Area */
+.empyrion-main {
+  padding: 2rem 1rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+/* Footer */
+.empyrion-footer {
+  text-align: center;
+  font-size: 0.9rem;
+  padding: 1rem;
+  color: #888;
+  background-color: #0d0f12;
+  border-top: 1px solid #1c1f24;
+}
+
+/* ItemSearchPage */
+
+.search-section {
+  margin: 2rem auto;
+  display: flex;
+  gap: 1rem;
+  max-width: 500px;
+  position: relative;
+}
+
+.search-section input {
+  flex: 1;
+  padding: 0.6rem 1rem;
+  font-size: 1rem;
+  border-radius: 4px;
+  border: 1px solid #444;
+  background-color: #1b1e25;
+  color: #fff;
+}
+
+.search-section button {
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
+  border: 2px solid #37D2FF;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.search-section button:hover {
+  background-color: #37d2ff22;
+}
+
+.suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background-color: #1b1e25;
+  border: 1px solid #333;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 10;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.suggestions li {
+  padding: 0.6rem 1rem;
+  cursor: pointer;
+}
+
+.suggestions li:hover {
+  background-color: #2a2f3a;
+}
+
+.results-grid {
+  display: flex;
+  justify-content: space-between;
+  gap: 3rem;
+  margin-top: 3rem;
+}
+
+.results-grid div {
+  flex: 1;
+  min-width: 0;
+}
+
+.results-grid h2 {
+  color: #37D2FF;
+  border-bottom: 1px solid #2a2f3a;
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.results-grid li {
+  padding: 0.4rem 0;
+}
+
+.error-text {
+  color: #ff5e5e;
+  margin-top: 1rem;
+}
+
+/* Universal scrollbar styling (Chrome, Edge, Safari) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1c1f24;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #37D2FF;
+  border-radius: 10px;
+  border: 2px solid #1c1f24;
+}
+
+/* Firefox support */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #37D2FF #1c1f24;
+}

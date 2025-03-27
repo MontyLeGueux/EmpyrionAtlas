@@ -178,7 +178,7 @@ public class EGSBlueprintParser {
             		&& currentTraderName != null
             		&& i + BLUEPRINT_TRADER_RESTOCK_START_STRING.length() < data.length) {
             	byte restockTimerbyte = data[i + BLUEPRINT_TRADER_RESTOCK_START_STRING.length()];
-            	traderInstances.add(new TraderInstanceDTO(currentTraderName, restockTimerbyte & 0xFF)); //restock timer is an uint8
+            	traderInstances.add(new TraderInstanceDTO(currentTraderName, restockTimerbyte & 0xFF, "")); //restock timer is an uint8
             	logger.info("Parsed trader with name : " + currentTraderName + " and restock timer : " + (restockTimerbyte & 0xFF));
             	currentTraderName = null;
             }

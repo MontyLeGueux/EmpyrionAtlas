@@ -1,0 +1,48 @@
+.trade-box {
+  background-color: #1c1f24;
+  padding: 1rem;
+  border: 1px solid #2a2f3a;
+  border-radius: 6px;
+  margin-bottom: 1.5rem;
+  transition: background-color 0.2s;
+}
+
+.trade-box:hover {
+  background-color: #252932;
+}
+
+.trade-box-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  color: #37D2FF;
+}
+
+.trade-box-header h3 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+.trade-box-sub {
+  margin: 0.3rem 0 0;
+  font-size: 0.95rem;
+  color: #ccc;
+}
+
+.toggle {
+  font-size: 1.3rem;
+  color: #bbb;
+}
+
+.station-list {
+  margin-top: 1rem;
+  padding-left: 1.5rem;
+  color: #bbb;
+}
+
+.station-list .restock {
+  color: #888;
+  font-size: 0.9rem;
+  margin-left: 0.3rem;
+}

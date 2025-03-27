@@ -1,26 +1,28 @@
 package com.empyrionatlas.dto;
 
+import java.util.List;
+
 public class ItemTradeInfoDTO {
-    private String itemStringID;
+    private String itemName;
     private double avgSellPrice;
     private double avgBuyPrice;
     private int avgSellVolume;
     private int avgBuyVolume;
-    private TraderDTO trader;
+    private List<TraderInstanceDTO> traders;
     
-    public ItemTradeInfoDTO(String itemStringID, double avgSellPrice, double avgBuyPrice, int avgSellVolume, int avgBuyVolume, TraderDTO trader) {
-        this.itemStringID = itemStringID;
+    public ItemTradeInfoDTO(String itemName, double avgSellPrice, double avgBuyPrice, int avgSellVolume, int avgBuyVolume, List<TraderInstanceDTO> traders) {
+        this.itemName = itemName;
         this.avgSellPrice = avgSellPrice;
         this.avgBuyPrice = avgBuyPrice;
         this.avgSellVolume = avgSellVolume;
         this.avgBuyVolume = avgBuyVolume;
-        this.trader = trader;
+        this.traders = traders;
     }
 
-    public String getItemStringID() { return itemStringID; }
+    public String getItemName() { return itemName; }
     public double getAvgSellPrice() { return avgSellPrice; }
     public double getAvgBuyPrice() { return avgBuyPrice; }
     public int getAvgSellVolume() { return avgSellVolume; }
     public int getAvgBuyVolume() { return avgBuyVolume; }
-    public TraderDTO getTrader() { return trader; }
+    public List<TraderInstanceDTO> getTraders() { return traders; }
 }

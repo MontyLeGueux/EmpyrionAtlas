@@ -91,12 +91,22 @@ public class ModTradingDataService {
         }
     	
     	for(TradeData trade : allTradesWithItem) {
-    		result.add(new ItemTradeInfoDTO(itemName,
-    				trade.getAverageSellPrice(),
-    				trade.getAverageBuyPrice(),
-    				trade.getAverageSellVolume(),
-    				trade.getAverageBuyVolume(),
-    				new TraderDTO((trade.getTrader() != null ? trade.getTrader().getName() : ""))));
+    		if(trade.getTrader() != null) {
+    			List<TraderInstanceData> traderInstances = traderInstanceRepository.findTraderInstancByTraderName(trade.getTrader().getName());
+    			
+	    		result.add(new ItemTradeInfoDTO(itemName,
+	    				trade.getAverageSellPrice(),
+	    				trade.getAverageBuyPrice(),
+	    				trade.getAverageSellVolume(),
+	    				trade.getAverageBuyVolume(),
+	    				traderInstances.stream()
+	    			    .map(instance -> new TraderInstanceDTO(
+	    			    	trade.getTrader().getName(),
+	    			        instance.getRestockTimer(),
+	    			        instance.getStation().getName()
+	    			    ))
+	    			    .collect(Collectors.toList())));
+    		}
     	}
     	logger.info("Found : " + result.size() + " trades for item : " + itemName);
     	return result;
