@@ -14,6 +14,6 @@ public interface TraderInstanceRepository extends JpaRepository<TraderInstanceDa
 	@Query("SELECT ti.station FROM TraderInstanceData ti WHERE ti.trader.name = :name")
 	List<StationData> findStationsByTraderName(@Param("name") String name);
 	
-	List<TraderInstanceData> findTraderInstancByTraderName(@Param("name") String name); 
+	List<TraderInstanceData> findTraderInstanceByTraderName(@Param("name") String name); 
 
 }

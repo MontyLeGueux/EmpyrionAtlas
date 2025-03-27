@@ -38,12 +38,22 @@ const ItemSearchPage = () => {
 
     try {
       const response = await axios.get(`http://localhost:8080/api/items/${searchQuery}`);
-      const data = response.data;
+      const { itemExists, trades } = response.data;
+	  
+	  if(!itemExists){
+		setError("This item was not found in the database.");
+		return;
+	  }
+	  
+	  if(trades.length === 0){
+  		setError("There are no trades associated with this item.");
+  		return;
+	  }
 
       const sellersList = [];
       const buyersList = [];
 
-      data.forEach((entry) => {
+      trades.forEach((entry) => {
         const traderName = entry.traders?.[0]?.traderName || 'Unknown';
         if (entry.avgSellPrice > 0 && entry.avgSellVolume > 0) {
           sellersList.push({ traderName, price: entry.avgSellPrice, volume: entry.avgSellVolume, traders: entry.traders });
@@ -58,7 +68,7 @@ const ItemSearchPage = () => {
       setBuyers(buyersList);
     } catch (err) {
       console.error(err);
-      setError('Error fetching trade data.');
+      setError("Error fetching trade data");
     }
   };
 

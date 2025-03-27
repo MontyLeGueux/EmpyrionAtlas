@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.empyrionatlas.dto.ItemTradeInfoDTO;
+import com.empyrionatlas.dto.ItemTradeSearchResultDTO;
+import com.empyrionatlas.service.ModConfigService;
 import com.empyrionatlas.service.ModTradingDataService;
 
 @RestController
@@ -17,9 +19,11 @@ import com.empyrionatlas.service.ModTradingDataService;
 public class ItemInformationController {
 	
 	private final ModTradingDataService modTradingDataService;
+	private final ModConfigService modConfigService;
 
-	public ItemInformationController(ModTradingDataService modTradingDataService) {
+	public ItemInformationController(ModTradingDataService modTradingDataService, ModConfigService modConfigService) {
         this.modTradingDataService = modTradingDataService;
+        this.modConfigService = modConfigService;
     }
 
     @GetMapping("/check")
@@ -28,23 +32,19 @@ public class ItemInformationController {
     }
     
     @GetMapping("/{itemName}")
-    public ResponseEntity<List<ItemTradeInfoDTO>> getItemTradeData(@PathVariable String itemName) {
-        List<ItemTradeInfoDTO> itemTradeDTO = modTradingDataService.getItemTradeData(itemName);
+    public ResponseEntity<ItemTradeSearchResultDTO> getItemTradeData(@PathVariable String itemName) {
+    	ItemTradeSearchResultDTO searchResult = modTradingDataService.getItemTradeData(itemName);
         
-        if(itemTradeDTO == null) {
-        	return ResponseEntity.notFound().build();
-        }
-        
-        if (itemTradeDTO.isEmpty()) {
-            return ResponseEntity.notFound().build();
+        if(searchResult == null) {
+        	return ResponseEntity.internalServerError().build();
         }
 
-        return ResponseEntity.ok(itemTradeDTO);
+        return ResponseEntity.ok(searchResult);
     }
     
     @GetMapping("/DebugParseConfig")
     public String debugParseConfig() {
-    	modTradingDataService.refreshTradingData();
+    	modConfigService.refreshTradingData();
         return "Refreshing database and parsing config";
     }
     
