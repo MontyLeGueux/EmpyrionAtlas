@@ -152,7 +152,7 @@ public class ModConfigService {
     	        			    });
     	        		
     	        		for (TraderInstanceDTO traderInstanceDTO : parseResult.getBlueprintTraderInstances()) {
-    	        		   trader = traderRepository.findByName(traderInstanceDTO.getTraderName()).orElse(null);
+    	        		   trader = traderRepository.findByStringID(traderInstanceDTO.getTraderName()).orElse(null);
     	        		   
     	        		    if(trader != null) {
     	        		    	traderInstance = new TraderInstanceData();
@@ -174,12 +174,13 @@ public class ModConfigService {
     
     private void processTraderConfigFile(Map<String, ItemData> itemCache) throws IOException {
         File traderConfigFile = new File(efcTraderInfoFilePath);
+        File localizationFile = new File(csvLocalizationFilePath);
 
         if (!traderConfigFile.exists()) {
             throw new IOException("TraderNPCConfig.ecf not found at : " + efcTraderInfoFilePath);
         }
 
-        TradeConfigParseResultDTO traders = REConfigParser.parseTraderConfigFile(traderConfigFile, itemCache);
+        TradeConfigParseResultDTO traders = REConfigParser.parseTraderConfigFile(traderConfigFile, localizationFile, itemCache);
         if (traders != null) {
         	for(TraderData trader : traders.getTraders()) {
         		traderRepository.save(trader);

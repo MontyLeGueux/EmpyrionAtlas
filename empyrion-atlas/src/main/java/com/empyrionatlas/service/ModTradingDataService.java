@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import com.empyrionatlas.dto.BlueprintParseResultDTO;
 import com.empyrionatlas.dto.ItemTradeInfoDTO;
 import com.empyrionatlas.dto.ItemTradeSearchResultDTO;
+import com.empyrionatlas.dto.ProfitableTradeDTO;
 import com.empyrionatlas.dto.TradeConfigParseResultDTO;
 import com.empyrionatlas.dto.TraderDTO;
 import com.empyrionatlas.dto.TraderInstanceDTO;
@@ -93,9 +94,9 @@ public class ModTradingDataService {
     	
     	for(TradeData trade : allTradesWithItem) {
     		if(trade.getTrader() != null) {
-    			List<TraderInstanceData> traderInstances = traderInstanceRepository.findTraderInstanceByTraderName(trade.getTrader().getName());
+    			List<TraderInstanceData> traderInstances = traderInstanceRepository.findTraderInstanceByTraderStringID(trade.getTrader().getStringID());
     			if(traderInstances.isEmpty()) {
-    				logger.info("Trader instances is empty for trader : " + trade.getTrader().getName());
+    				logger.info("Trader instances is empty for trader : " + trade.getTrader().getStringID());
     			}
     			else {
 		    		result.add(new ItemTradeInfoDTO(itemName,
@@ -132,5 +133,56 @@ public class ModTradingDataService {
         }
         
         return suggestedNames;
+    }
+    
+    public List<ProfitableTradeDTO> getProfitableTrades() {
+        List<TradeData> allTrades = tradeRepository.findAllWithDetails();
+        List<ProfitableTradeDTO> result = new ArrayList<>();
+
+        for (TradeData sellerTrade : allTrades) {
+            for (TradeData buyerTrade : allTrades) {
+                // if we found different traders trading the same item
+                if (!sellerTrade.getTrader().equals(buyerTrade.getTrader()) &&
+                    sellerTrade.getItem().getStringID().equals(buyerTrade.getItem().getStringID())) {
+
+                    double avgSellPrice = sellerTrade.getAverageSellPrice();
+                    double avgBuyPrice = buyerTrade.getAverageBuyPrice();
+
+                    int avgSellStock = sellerTrade.getAverageSellVolume();
+                    int sellableAmount = buyerTrade.getAverageBuyVolume();
+
+                    int tradeAmount = Math.min(avgSellStock, sellableAmount);
+                    double profitPerItem = avgBuyPrice - avgSellPrice;
+                    double totalProfit = profitPerItem * tradeAmount;
+
+                    //if we have a non zero amount we can buy then sell and if it makes a positive amount of money
+                    if (tradeAmount > 0 && profitPerItem > 0) {
+                    	List<String> buyStations = sellerTrade.getTrader().getLocations().isEmpty()
+                            ? new ArrayList<>()
+                            : buyerTrade.getTrader().getLocations().stream().map(t -> t.getStation().getName()).distinct().toList();
+
+                    	List<String> sellStations = buyerTrade.getTrader().getLocations().isEmpty()
+                            ? new ArrayList<>()
+                            : sellerTrade.getTrader().getLocations().stream().map(t -> t.getStation().getName()).distinct().toList();
+                    	
+                        result.add(new ProfitableTradeDTO(
+                            sellerTrade.getItem().getItemName(),
+                            buyStations,
+                            sellStations,
+                            buyerTrade.getTrader().getName(),
+                            sellerTrade.getTrader().getName(),
+                            avgSellPrice,
+                            avgBuyPrice,
+                            tradeAmount,
+                            totalProfit
+                        ));
+                    }
+                }
+            }
+        }
+
+        // Sort by most profitable first
+        result.sort((a, b) -> Double.compare(b.getTotalProfit(), a.getTotalProfit()));
+        return result;
     }
 }

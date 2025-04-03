@@ -11,6 +11,7 @@ const Navbar = () => {
       <nav className="navbar-links">
         <Link to="/" className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}>Trade Planner</Link>
         <Link to="/items" className={`nav-link ${location.pathname === '/items' ? 'active' : ''}`}>Item Lookup</Link>
+		<Link to="/trades" className={`nav-link ${location.pathname === '/trades' ? 'active' : ''}`}>Profitable Trades</Link>
         <Link to="/about" className={`nav-link ${location.pathname === '/about' ? 'active' : ''}`}>About</Link>
       </nav>
     </header>

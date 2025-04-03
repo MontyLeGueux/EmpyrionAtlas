@@ -34,24 +34,26 @@ public class REConfigParser {
 
         List<GlobalDefConfigEntryDTO> globalDefConfig = parseGlobalDef(globalDefFile);
 
-        Map<String, String> itemNames = parseItemNames(localizationFile);
+        Map<String, String> localizationData = parseItemNames(localizationFile);
         
         logger.info("Parsing item config file ...");
-        items = parseItemFile(itemsFile, items, globalDefConfig, itemNames);
+        items = parseItemFile(itemsFile, items, globalDefConfig, localizationData);
         
         logger.info("Parsing blocks config file ...");
-        items = parseItemFile(blocksFile, items, globalDefConfig, itemNames);
+        items = parseItemFile(blocksFile, items, globalDefConfig, localizationData);
         
         logger.info("Parsed " + items.size() + " items");
 		return items;
 	}
 
-	public static TradeConfigParseResultDTO parseTraderConfigFile(File ecfFile, Map<String, ItemData> itemCache) throws IOException {
+	public static TradeConfigParseResultDTO parseTraderConfigFile(File ecfFile, File localizationFile, Map<String, ItemData> itemCache) throws IOException {
         List<TraderData> traders = new ArrayList<>();
         TraderData currentTrader = null;
         List<TradeData> items = new ArrayList<>();
-
+        
         logger.info("Parsing traders config file ...");
+        
+        Map<String, String> localizationData = parseItemNames(localizationFile);
         
         try (BufferedReader br = new BufferedReader(new FileReader(ecfFile))) {
             String line;
@@ -65,6 +67,7 @@ public class REConfigParser {
                     if (currentTrader != null) {
                         currentTrader.setItemsForSale(items);
                         traders.add(currentTrader);
+                        logger.info("Finished parsing trades for trader : " + currentTrader.getStringID());
                     }
                     currentTrader = new TraderData();
                     items = new ArrayList<>();
@@ -88,7 +91,13 @@ public class REConfigParser {
                 if (currentTrader != null) {
                     switch (key) { //add extra trader values here as needed.
                         case "Trader Name" -> {
-                        	currentTrader.setName(value);
+                        	currentTrader.setStringID(value);
+                        	if(localizationData.containsKey(value)) {
+                        		currentTrader.setName(localizationData.get(value));
+                        	}
+                        	else {
+                        		currentTrader.setName(value);
+                        	}
                         }
                         default -> {
                             if (key.startsWith("Item")) {
@@ -116,20 +125,36 @@ public class REConfigParser {
         }
 
         double minSellMF = 0, maxSellMF = 0, minBuyMF = 0, maxBuyMF = 0;
+        
+        int fixedSellPriceMin = 0, fixedBuyPriceMin = 0, fixedBuyPriceMax = 0, fixedSellPriceMax = 0;
         int sellStockMin = 0, sellStockMax = 0, totalStockMin = 0, totalStockMax = 0;
 
         //Parse sell data
         if(parts.length >= 3) {
-        	range = parts[1].replace("mf=", "").split("-");
-        	minSellMF = Double.parseDouble(range[0].trim());
-        	if(range.length > 1) {
-        		maxSellMF = Double.parseDouble(range[1].trim());
+        	//check if the price is fixed or expressed with market fluctuations
+        	if(parts[1].contains("mf=")) {
+        		range = parts[1].replace("mf=", "").split("-");
+            	minSellMF = Double.parseDouble(range[0].trim());
+            	if(range.length > 1) {
+            		maxSellMF = Double.parseDouble(range[1].trim());
+            	}
+            	else {
+            		maxSellMF = minSellMF;
+            	}
+            	logger.info("Parsing sell mf :" + minSellMF + " " + maxSellMF);
         	}
         	else {
-        		maxSellMF = 0;
+        		range = parts[1].split("-");
+        		fixedSellPriceMin = Integer.parseInt(range[0].trim());
+        		if(range.length > 1) {
+        			fixedSellPriceMax = Integer.parseInt(range[1].trim());
+        		}
+        		else {
+        			fixedSellPriceMax = fixedSellPriceMin;
+        		}
+        		logger.info("Parsing sell fixed price :" + fixedSellPriceMin + " " + fixedSellPriceMin);
         	}
-            logger.info("Parsing sell mf :" + minSellMF + " " + maxSellMF);
-            
+
             parts[2] = parts[2].split("#")[0];
             range = parts[2].split("-");
             sellStockMin = Integer.parseInt(range[0].trim());
@@ -137,24 +162,36 @@ public class REConfigParser {
             	sellStockMax = Integer.parseInt(range[1].trim());
             }
             else {
-            	sellStockMax = 0;
+            	sellStockMax = sellStockMin;
             }
             
         	logger.info("Parsing sell stock :" + sellStockMin + " " + sellStockMax);
         }
         //Parse buy data
         if(parts.length >= 5) {
-        	range = parts[3].replace("mf=", "").split("-");
-        	minBuyMF = Double.parseDouble(range[0].trim());
-        	if(range.length > 1) {
-        		maxBuyMF = Double.parseDouble(range[1].trim());
+        	if(parts[3].contains("mf=")) {
+	        	range = parts[3].replace("mf=", "").split("-");
+	        	minBuyMF = Double.parseDouble(range[0].trim());
+	        	if(range.length > 1) {
+	        		maxBuyMF = Double.parseDouble(range[1].trim());
+	        	}
+	        	else {
+	        		maxBuyMF = minBuyMF;
+	        	}
+	        	logger.info("Parsing buy mf :" + minBuyMF + " " + maxBuyMF);
         	}
         	else {
-        		maxBuyMF = 0;
+        		range = parts[3].split("-");
+        		fixedBuyPriceMin = Integer.parseInt(range[0].trim());
+        		if(range.length > 1) {
+        			fixedBuyPriceMax = Integer.parseInt(range[1].trim());
+        		}
+        		else {
+        			fixedBuyPriceMax = fixedBuyPriceMin;
+        		}
+        		logger.info("Parsing buy fixed price :" + fixedBuyPriceMin + " " + fixedBuyPriceMax);
         	}
-    		
-    		logger.info("Parsing buy mf :" + minBuyMF + " " + maxBuyMF);
-        	
+
     		parts[4] = parts[4].split("#")[0];
     		range = parts[4].split("-");
     		totalStockMin = Integer.parseInt(range[0].trim());
@@ -162,12 +199,12 @@ public class REConfigParser {
     			totalStockMax = Integer.parseInt(range[1].trim());
     		}
     		else {
-    			totalStockMax = 0;
+    			totalStockMax = totalStockMin;
     		}
         	logger.info("Parsing total stock :" + totalStockMin + " " + totalStockMax);
         }
 
-        return new TradeData(trader, item, sellStockMin, sellStockMax, minSellMF, maxSellMF, totalStockMin, totalStockMax, minBuyMF, maxBuyMF);
+        return new TradeData(trader, item, sellStockMin, sellStockMax, totalStockMin, totalStockMax, minSellMF, maxSellMF, minBuyMF, maxBuyMF, fixedSellPriceMin, fixedSellPriceMax, fixedBuyPriceMin, fixedBuyPriceMax);
     }
 	
 	private static List<GlobalDefConfigEntryDTO> parseGlobalDef(File globalDefFile) throws IOException {

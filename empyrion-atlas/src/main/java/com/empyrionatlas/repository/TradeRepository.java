@@ -12,4 +12,7 @@ import com.empyrionatlas.model.TradeData;
 public interface TradeRepository  extends JpaRepository<TradeData, Long>{
 	@Query("SELECT i FROM TradeData i WHERE i.item.itemName = :itemName")
 	List<TradeData> findByItemName(String itemName);
+	
+	@Query("SELECT t FROM TradeData t JOIN FETCH t.item i JOIN FETCH t.trader tr JOIN FETCH tr.locations l JOIN FETCH l.station s")
+	List<TradeData> findAllWithDetails();
 }

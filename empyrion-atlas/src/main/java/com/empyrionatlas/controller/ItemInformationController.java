@@ -11,11 +11,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.empyrionatlas.dto.ItemTradeInfoDTO;
 import com.empyrionatlas.dto.ItemTradeSearchResultDTO;
+import com.empyrionatlas.dto.ProfitableTradeDTO;
 import com.empyrionatlas.service.ModConfigService;
 import com.empyrionatlas.service.ModTradingDataService;
 
 @RestController
-@RequestMapping("/api/items")
+@RequestMapping("/api")
 public class ItemInformationController {
 	
 	private final ModTradingDataService modTradingDataService;
@@ -31,7 +32,7 @@ public class ItemInformationController {
         return "Service is running!";
     }
     
-    @GetMapping("/{itemName}")
+    @GetMapping("/items/{itemName}")
     public ResponseEntity<ItemTradeSearchResultDTO> getItemTradeData(@PathVariable String itemName) {
     	ItemTradeSearchResultDTO searchResult = modTradingDataService.getItemTradeData(itemName);
         
@@ -48,9 +49,14 @@ public class ItemInformationController {
         return "Refreshing database and parsing config";
     }
     
-    @GetMapping("/suggest")
+    @GetMapping("/items/suggest")
     public ResponseEntity<List<String>> suggestItems(@RequestParam String query) {
         List<String> suggestions = modTradingDataService.suggestItemNames(query);
         return ResponseEntity.ok(suggestions);
+    }
+    
+    @GetMapping("/profitable-trades")
+    public ResponseEntity<List<ProfitableTradeDTO>> getProfitableTrades() {
+        return ResponseEntity.ok(modTradingDataService.getProfitableTrades());
     }
 }

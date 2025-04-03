@@ -13,7 +13,7 @@ public class TraderData {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 	
-	@Column(name = "name")
+	private String stringID;
 	private String name;
 	
 	@OneToMany(mappedBy = "trader", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
@@ -24,11 +24,15 @@ public class TraderData {
 	
 	public TraderData() {}
 
-    public TraderData(String name, List<TradeData> itemsForSale, List<TraderInstanceData> locations) { 
+    public TraderData(String stringID, String name, List<TradeData> itemsForSale, List<TraderInstanceData> locations) { 
+    	this.stringID = stringID;
     	this.name = name;
     	this.itemsForSale = itemsForSale;
     	this.locations = locations;
     }
+
+	public void setStringID(String stringID) { this.stringID = stringID; }
+	public String getStringID() { return stringID; }
 
 	public void setName(String name) { this.name = name; }
 	public String getName() { return name; }

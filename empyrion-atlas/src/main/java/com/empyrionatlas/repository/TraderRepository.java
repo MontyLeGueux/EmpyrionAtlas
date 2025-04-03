@@ -6,5 +6,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import com.empyrionatlas.model.TraderData;
 
 public interface TraderRepository extends JpaRepository<TraderData, Long>{
-	Optional<TraderData> findByName(String name);
+	Optional<TraderData> findByStringID(String name);
 }
