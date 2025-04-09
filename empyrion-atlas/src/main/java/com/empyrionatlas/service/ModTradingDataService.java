@@ -110,6 +110,7 @@ public class ModTradingDataService {
 		    			        instance.getRestockTimer(),
 		    			        instance.getStation().getName()
 		    			    ))
+		    			    .distinct()
 		    			    .collect(Collectors.toList())));
     			}
     		}

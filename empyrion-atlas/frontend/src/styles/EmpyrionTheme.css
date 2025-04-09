@@ -70,6 +70,7 @@ a {
   width: 100%;
   box-sizing: border-box;
 }
+
 /* Footer */
 .empyrion-footer {
   text-align: center;
@@ -78,6 +79,17 @@ a {
   color: #888;
   background-color: #0d0f12;
   border-top: 1px solid #1c1f24;
+  line-height: 1.6;
+}
+
+.empyrion-footer a {
+  color: #37D2FF;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.empyrion-footer a:hover {
+  text-decoration: underline;
 }
 
 /* ItemSearchPage */
@@ -165,6 +177,47 @@ a {
 .error-text {
   color: #ff5e5e;
   margin-top: 1rem;
+}
+
+/*About Page*/
+.about-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem;
+  color: #f1f1f1;
+  line-height: 1.7;
+  font-size: 1.1rem;
+}
+
+.about-title {
+  font-size: 2.2rem;
+  margin-bottom: 2.5rem;
+  color: #37D2FF;
+  text-align: center;
+}
+
+.about-section {
+  margin-bottom: 2.5rem;
+}
+
+.about-paragraph {
+  background-color: #1b1e25;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid #2a2f3a;
+  box-shadow: 0 0 5px #12141966;
+}
+
+.about-paragraph .highlight {
+  color: #37D2FF;
+  font-weight: 600;
+}
+
+.section-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #37D2FF;
+  margin-bottom: 0.8rem;
 }
 
 /* Universal scrollbar styling (Chrome, Edge, Safari) */
