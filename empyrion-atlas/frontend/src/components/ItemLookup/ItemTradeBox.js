@@ -33,7 +33,7 @@ const ItemTradeBox = ({ tradeInfo, collapseTrigger, onCollapseAll, collapseMode,
         <div>
           <h3>{tradeInfo.traderName}</h3>
           <p className="trade-box-sub">
-            {volume} units @ {Math.round(price)} credits
+            <span className="profit-value">{Math.round(price)} cr</span> - {volume} units
           </p>
         </div>
         <span className="toggle">{expanded ? '▾' : '▸'}</span>

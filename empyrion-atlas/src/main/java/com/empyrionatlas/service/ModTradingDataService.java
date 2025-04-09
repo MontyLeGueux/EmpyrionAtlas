@@ -20,6 +20,7 @@ import com.empyrionatlas.repository.StationRepository;
 import com.empyrionatlas.repository.TradeRepository;
 import com.empyrionatlas.repository.TraderInstanceRepository;
 import com.empyrionatlas.repository.TraderRepository;
+import com.empyrionatlas.utils.DataUtils;
 import com.empyrionatlas.utils.EGSBlueprintParser;
 import com.empyrionatlas.utils.REConfigParser;
 
@@ -110,7 +111,7 @@ public class ModTradingDataService {
 		    			        instance.getRestockTimer(),
 		    			        instance.getStation().getName()
 		    			    ))
-		    			    .distinct()
+		    			    .filter(DataUtils.distinctByKey(instance -> instance.getStationName()))
 		    			    .collect(Collectors.toList())));
     			}
     		}
