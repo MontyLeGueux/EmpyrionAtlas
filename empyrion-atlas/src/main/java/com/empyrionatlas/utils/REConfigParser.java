@@ -16,10 +16,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.empyrionatlas.dto.GlobalDefConfigEntryDTO;
-import com.empyrionatlas.dto.TradeConfigParseResultDTO;
-import com.empyrionatlas.model.ItemData;
-import com.empyrionatlas.model.TradeData;
-import com.empyrionatlas.model.TraderData;
+import com.empyrionatlas.dto.parsing.ParsedItemDTO;
+import com.empyrionatlas.dto.parsing.ParsedTradeDTO;
+import com.empyrionatlas.dto.parsing.ParsedTraderDTO;
 
 public class REConfigParser {
 	
@@ -29,31 +28,25 @@ public class REConfigParser {
 	private static final Pattern ITEM_GLOBALREF_PATTERN = Pattern.compile("GlobalRef:\\s*(\\S+)");
     private static final Pattern ITEM_PRICE_PATTERN = Pattern.compile("MarketPrice:\\s*(\\d+(\\.\\d+)?)");
 	
-	public static List<ItemData> parseItemConfigFile(File itemsFile, File blocksFile, File globalDefFile, File localizationFile) throws IOException {
-		List<ItemData> items = new ArrayList<>();
-
-        List<GlobalDefConfigEntryDTO> globalDefConfig = parseGlobalDef(globalDefFile);
-
-        Map<String, String> localizationData = parseItemNames(localizationFile);
+	public static Map<String, ParsedItemDTO> parseItemsAndBlocksConfigFile(File itemsFile, File blocksFile) throws IOException {
+		Map<String, ParsedItemDTO> items;
         
         logger.info("Parsing item config file ...");
-        items = parseItemFile(itemsFile, items, globalDefConfig, localizationData);
+        items = parseItemFile(itemsFile);
         
         logger.info("Parsing blocks config file ...");
-        items = parseItemFile(blocksFile, items, globalDefConfig, localizationData);
+        items.putAll(parseItemFile(blocksFile));
         
         logger.info("Parsed " + items.size() + " items");
 		return items;
 	}
 
-	public static TradeConfigParseResultDTO parseTraderConfigFile(File ecfFile, File localizationFile, Map<String, ItemData> itemCache) throws IOException {
-        List<TraderData> traders = new ArrayList<>();
-        TraderData currentTrader = null;
-        List<TradeData> items = new ArrayList<>();
+	public static Map<String, ParsedTraderDTO> parseTraderConfigFile(File ecfFile) throws IOException {
+		Map<String, ParsedTraderDTO> result = new HashMap<String, ParsedTraderDTO>();
+        String currentTraderID = null;
+        List<ParsedTradeDTO> currentTraderTrades = new ArrayList<ParsedTradeDTO>();
         
         logger.info("Parsing traders config file ...");
-        
-        Map<String, String> localizationData = parseItemNames(localizationFile);
         
         try (BufferedReader br = new BufferedReader(new FileReader(ecfFile))) {
             String line;
@@ -64,21 +57,16 @@ public class REConfigParser {
                 }
 
                 if (line.startsWith("{")) {
-                    if (currentTrader != null) {
-                        currentTrader.setItemsForSale(items);
-                        traders.add(currentTrader);
-                        logger.info("Finished parsing trades for trader : " + currentTrader.getStringID());
-                    }
-                    currentTrader = new TraderData();
-                    items = new ArrayList<>();
                     line = line.substring(1);
                     line.trim();
                 }
 
                 if (line.startsWith("}")) {
-                    if (currentTrader != null) {
-                        currentTrader.setItemsForSale(items);
-                        traders.add(currentTrader);
+                	if (currentTraderID != null) {
+                    	logger.info("Finished parsing trader : " + currentTraderID + " with " + currentTraderTrades.size() + " trades");
+                    	result.put(currentTraderID, new ParsedTraderDTO(currentTraderID, new ArrayList<>(currentTraderTrades)));
+                    	currentTraderID = null;
+                    	currentTraderTrades.clear();
                     }
                     continue;
                 }
@@ -88,42 +76,29 @@ public class REConfigParser {
 
                 String key = parts[0].trim();
                 String value = parts[1].trim().replaceAll("\"", "");
-                if (currentTrader != null) {
-                    switch (key) { //add extra trader values here as needed.
-                        case "Trader Name" -> {
-                        	currentTrader.setStringID(value);
-                        	if(localizationData.containsKey(value)) {
-                        		currentTrader.setName(localizationData.get(value));
-                        	}
-                        	else {
-                        		currentTrader.setName(value);
-                        	}
-                        }
-                        default -> {
-                            if (key.startsWith("Item")) {
-                                items.add(parseTrade(value, currentTrader, itemCache));
-                            }
+                switch (key) { //add extra trader values here as needed.
+                    case "Trader Name" -> {
+                    	currentTraderID = value;
+                    }
+                    default -> {
+                        if (key.startsWith("Item")) {
+                        	logger.info("Parsing trade with line : " + value);
+                        	currentTraderTrades.add(parseTrade(value, currentTraderID));
                         }
                     }
                 }
             }
         }
-        logger.info("Parsed " + traders.size() + " traders");
-		return new TradeConfigParseResultDTO(traders);
+        logger.info("Parsed " + result.size() + " traders");
+		return result;
 	}
 	
-	private static TradeData parseTrade(String itemLine, TraderData trader, Map<String, ItemData> itemCache) {
+	private static ParsedTradeDTO parseTrade(String itemLine, String traderName) {
 		logger.info("Parsing item from " + itemLine);
         String[] parts = itemLine.split(",");
         String itemName = parts[0].trim();
         String[] range;
         
-        ItemData item = itemCache.get(itemName);
-        if(item == null) {
-        	logger.error("Couldn't find item : " + itemName + " in cache, aborting trade parsing");
-        	return null;
-        }
-
         double minSellMF = 0, maxSellMF = 0, minBuyMF = 0, maxBuyMF = 0;
         
         int fixedSellPriceMin = 0, fixedBuyPriceMin = 0, fixedBuyPriceMax = 0, fixedSellPriceMax = 0;
@@ -203,12 +178,12 @@ public class REConfigParser {
     		}
         	logger.info("Parsing total stock :" + totalStockMin + " " + totalStockMax);
         }
-
-        return new TradeData(trader, item, sellStockMin, sellStockMax, totalStockMin, totalStockMax, minSellMF, maxSellMF, minBuyMF, maxBuyMF, fixedSellPriceMin, fixedSellPriceMax, fixedBuyPriceMin, fixedBuyPriceMax);
+        logger.info("Parsed trade with item : " + itemName + " from trader : " + traderName);
+        return new ParsedTradeDTO(traderName, itemName, sellStockMin, sellStockMax, totalStockMin, totalStockMax, minSellMF, maxSellMF, minBuyMF, maxBuyMF, fixedSellPriceMin, fixedSellPriceMax, fixedBuyPriceMin, fixedBuyPriceMax);
     }
 	
-	private static List<GlobalDefConfigEntryDTO> parseGlobalDef(File globalDefFile) throws IOException {
-		List<GlobalDefConfigEntryDTO> globalDefConfig = new ArrayList<>();
+	public static Map<String, GlobalDefConfigEntryDTO> parseGlobalDef(File globalDefFile) throws IOException {
+		Map<String, GlobalDefConfigEntryDTO> globalDefConfig = new HashMap<String, GlobalDefConfigEntryDTO>();
 		String line;
 		String itemStringID = null;
 		int marketPrice = 0;
@@ -228,7 +203,7 @@ public class REConfigParser {
                 }
                 
                 if (itemStringID != null && marketPrice > 0) {
-                	globalDefConfig.add(new GlobalDefConfigEntryDTO(itemStringID, (int)marketPrice));
+                	globalDefConfig.put(itemStringID, new GlobalDefConfigEntryDTO(itemStringID, (int)marketPrice));
                     itemStringID = null;
                     marketPrice = 0;
                 }
@@ -238,7 +213,7 @@ public class REConfigParser {
 		return globalDefConfig;
 	}
 	
-	private static Map<String, String> parseItemNames(File localizationFile) throws IOException {
+	public static Map<String, String> parseLocalization(File localizationFile) throws IOException {
 		Map<String, String> itemNames = new HashMap<String, String>();
 		String line;
 		
@@ -256,10 +231,12 @@ public class REConfigParser {
         return itemNames;
 	}
 	
-	private static List<ItemData> parseItemFile(File itemsFile, List<ItemData> items, List<GlobalDefConfigEntryDTO> globalDefConfig, Map<String, String> itemNames) throws FileNotFoundException, IOException {
+	private static Map<String, ParsedItemDTO> parseItemFile(File itemsFile) throws FileNotFoundException, IOException {
 		String itemStringID = null;
+		String itemGlobalRef = null;
         int marketPrice = 0;
         String line;
+        Map<String, ParsedItemDTO> result = new HashMap<String, ParsedItemDTO>();
 		
 		try (BufferedReader br = new BufferedReader(new FileReader(itemsFile))) {
             while ((line = br.readLine()) != null) {
@@ -277,29 +254,19 @@ public class REConfigParser {
                 } else if (priceMatcher.find()) {
                     marketPrice = Integer.parseInt(priceMatcher.group(1));
                 } else if(globalRefMatcher.find()) {
-                	GlobalDefConfigEntryDTO result = globalDefConfig.stream()
-                            .filter(dto -> dto.getName().equals(globalRefMatcher.group(1)))
-                            .findFirst()
-                            .orElse(null);
-                	if(result != null) {
-                		marketPrice = result.getMarketPrice();
                 		logger.info("Found item " + itemStringID + " with globalRef " + globalRefMatcher.group(1));
-                	}
+                		itemGlobalRef = globalRefMatcher.group(1);
                 }
 
-                if (itemStringID != null && marketPrice > 0) {
-                	if(itemNames.containsKey(itemStringID)) {
-                		items.add(new ItemData(itemStringID, marketPrice, itemNames.get(itemStringID)));
-                		logger.info("Item : " + itemStringID + " with name " + itemNames.get(itemStringID) + " successfully added");
-                	}
-                	else {
-                		logger.info("Couldn't find name for item : " + itemStringID + " in localization list");
-                	}
+                if (itemStringID != null && (marketPrice > 0 || itemGlobalRef != null)) {	
+                	result.put(itemStringID, new ParsedItemDTO(itemStringID, itemGlobalRef, marketPrice));
+                	logger.info("Item : " + itemStringID + " parsed");
                     itemStringID = null;
                     marketPrice = 0;
+                    itemGlobalRef = null;
                 }
             }
         }
-		return items;
+		return result;
 	}
 }

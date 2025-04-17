@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
  	<groupId>com.github.montylegueux</groupId>
  	<artifactId>empyrion-atlas</artifactId>
- 	<version>0.0.1-SNAPSHOT</version>
+ 	<version>1.0</version>
   	<name>Empyrion Atlas</name>
   	<properties>
     	<java.version>18</java.version>
@@ -87,6 +87,13 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <version>${spring-boot.version}</version>
+		        <executions>
+		        <execution>
+		          <goals>
+		            <goal>repackage</goal>
+		          </goals>
+		        </execution>
+		      </executions>
             </plugin>
              <!-- Frontend Maven Plugin for React -->
 	        <plugin>
@@ -118,29 +125,6 @@
 	                </execution>
 	            </executions>
 	        </plugin>
-	        <!-- Start React App
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>3.1.0</version>
-                <executions>
-                    <execution>
-                        <id>start-frontend</id>
-                        <phase>validate</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <executable>npm</executable>
-                            <arguments>
-                                <argument>start</argument>
-                            </arguments>
-                            <workingDirectory>frontend</workingDirectory>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-             -->
         </plugins>
     </build>
 </project>

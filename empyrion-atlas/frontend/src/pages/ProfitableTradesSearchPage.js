@@ -12,7 +12,7 @@ function ProfitableTradesPage() {
 useEffect(() => {
   const fetchTrades = async () => {
     try {
-      const response = await axios.get('http://localhost:8080/api/profitable-trades');
+      const response = await axios.get('/api/profitable-trades');
       setTrades(response.data);
     } catch (error) {
       console.error('Failed to fetch profitable trades:', error);

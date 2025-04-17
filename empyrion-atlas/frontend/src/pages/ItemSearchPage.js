@@ -20,7 +20,7 @@ const ItemSearchPage = () => {
     }
 
     try {
-      const res = await axios.get(`http://localhost:8080/api/items/suggest?query=${query}`);
+      const res = await axios.get(`/api/items/suggest?query=${query}`);
       setSuggestions(res.data);
     } catch (err) {
       console.error(err);
@@ -37,7 +37,7 @@ const ItemSearchPage = () => {
     setBuyers([]);
 
     try {
-      const response = await axios.get(`http://localhost:8080/api/items/${searchQuery}`);
+      const response = await axios.get(`/api/items/${searchQuery}`);
       const { itemExists, trades } = response.data;
 	  
 	  if(!itemExists){

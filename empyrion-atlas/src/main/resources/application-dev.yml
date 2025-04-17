@@ -1,0 +1,17 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/empyrionatlas
+    username: dev
+    password: devpass
+    driver-class-name: org.postgresql.Driver
+
+cors:
+  enabled: true
+
+logging:
+  level:
+    org.hibernate: warn
+    org.hibernate.SQL: off
+    org.hibernate.type.descriptor.sql: off
+    org.hibernate.type.descriptor.sql.BasicBinder: off
+    org.hibernate.orm.jdbc.bind: off

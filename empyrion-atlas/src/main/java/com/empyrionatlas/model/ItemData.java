@@ -15,8 +15,7 @@ public class ItemData {
 	
 	@Column(nullable = true)
     private String itemName;
-	
-	@Column()
+
     private double basePrice;
 	
 	public ItemData() {}

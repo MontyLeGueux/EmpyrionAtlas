@@ -15,6 +15,8 @@ import com.empyrionatlas.dto.ProfitableTradeDTO;
 import com.empyrionatlas.service.ModConfigService;
 import com.empyrionatlas.service.ModTradingDataService;
 
+import jakarta.annotation.PostConstruct;
+
 @RestController
 @RequestMapping("/api")
 public class ItemInformationController {
@@ -25,11 +27,6 @@ public class ItemInformationController {
 	public ItemInformationController(ModTradingDataService modTradingDataService, ModConfigService modConfigService) {
         this.modTradingDataService = modTradingDataService;
         this.modConfigService = modConfigService;
-    }
-
-    @GetMapping("/check")
-    public String checkService() {
-        return "Service is running!";
     }
     
     @GetMapping("/items/{itemName}")
@@ -43,10 +40,9 @@ public class ItemInformationController {
         return ResponseEntity.ok(searchResult);
     }
     
-    @GetMapping("/DebugParseConfig")
-    public String debugParseConfig() {
+    @PostConstruct
+    public void refreshModData() {
     	modConfigService.refreshTradingData();
-        return "Refreshing database and parsing config";
     }
     
     @GetMapping("/items/suggest")
